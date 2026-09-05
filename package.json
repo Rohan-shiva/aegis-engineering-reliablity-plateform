@@ -1,0 +1,17 @@
+{
+  "name": "aegis-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Aegis — AI Engineering Reliability & Operations Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build:web": "npm run build --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web",
+    "type-check": "npm run type-check --workspace=apps/web"
+  },
+  "devDependencies": {}
+}
