@@ -1,0 +1,86 @@
+import { Deployment } from "@/types/domain";
+
+export const MOCK_DEPLOYMENTS: Deployment[] = [
+  {
+    id: "dep-101",
+    serviceId: "srv-payment",
+    serviceName: "payment-gateway",
+    environment: "PROD",
+    commitSha: "a8f9c1d",
+    commitMessage: "refactor(ledger): optimize payment ledger index and add Stripe webhook retry logic",
+    author: {
+      name: "Alex Dev",
+      githubHandle: "alex-dev",
+    },
+    deployedAt: "14 mins ago",
+    status: "failed",
+    riskScore: 82,
+    riskLevel: "HIGH",
+    riskFactors: [
+      "Payment service modified",
+      "Database schema query altered",
+      "Affected downstream service: order-processor",
+      "Similar deployment previously triggered SEV-2 incident",
+    ],
+  },
+  {
+    id: "dep-102",
+    serviceId: "srv-auth",
+    serviceName: "auth-service",
+    environment: "STAGING",
+    commitSha: "f3e2b10",
+    commitMessage: "feat(auth): add OAuth2 refresh token rotation mechanism",
+    author: {
+      name: "Sarah Miller",
+      githubHandle: "sarahm",
+    },
+    deployedAt: "42 mins ago",
+    status: "success",
+    riskScore: 14,
+    riskLevel: "LOW",
+    riskFactors: [
+      "Low risk non-breaking endpoint addition",
+      "100% unit & integration test coverage",
+    ],
+  },
+  {
+    id: "dep-103",
+    serviceId: "srv-recommendation",
+    serviceName: "recommendation-engine",
+    environment: "PROD",
+    commitSha: "c7d4e9a",
+    commitMessage: "perf(vector): tune Qdrant HNSW index M parameter for lower p99 latency",
+    author: {
+      name: "Rohan S",
+      githubHandle: "rohans",
+    },
+    deployedAt: "3 hours ago",
+    status: "success",
+    riskScore: 35,
+    riskLevel: "MEDIUM",
+    riskFactors: [
+      "Vector search configuration parameter change",
+      "Verified in staging benchmark environment",
+    ],
+  },
+  {
+    id: "dep-104",
+    serviceId: "srv-order",
+    serviceName: "order-processor",
+    environment: "PROD",
+    commitSha: "e9b2a11",
+    commitMessage: "fix(queue): adjust BullMQ job concurrency limits during peak batch",
+    author: {
+      name: "Elena Rostova",
+      githubHandle: "elena-r",
+    },
+    deployedAt: "5 hours ago",
+    status: "success",
+    riskScore: 28,
+    riskLevel: "LOW",
+    riskFactors: [
+      "Configuration tweak only",
+      "No database schema changes",
+    ],
+  },
+];
