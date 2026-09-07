@@ -16,6 +16,18 @@ export const MOCK_SERVICES: ServiceHealth[] = [
     repositoryUrl: "https://github.com/aegis/auth-service",
     lastDeployedAt: "42 mins ago",
     activeIncidentsCount: 0,
+    framework: "Node.js 20 / Express.js",
+    runtimeEnv: "AWS ECS Fargate",
+    slaTargetPercentage: 99.95,
+    endpoints: [
+      { method: "POST", path: "/api/v1/auth/login", p99LatencyMs: 45, errorRatePercentage: 0.01, status: "nominal" },
+      { method: "POST", path: "/api/v1/auth/verify-token", p99LatencyMs: 18, errorRatePercentage: 0.0, status: "nominal" },
+      { method: "GET", path: "/health", p99LatencyMs: 4, errorRatePercentage: 0.0, status: "nominal" },
+    ],
+    upstreamDependencies: [],
+    downstreamDependencies: [
+      { serviceId: "srv-db-user", serviceName: "user-db-cluster", type: "downstream", healthStatus: "healthy", protocol: "MongoDB", avgLatencyMs: 8 },
+    ],
   },
   {
     id: "srv-payment",
@@ -32,6 +44,21 @@ export const MOCK_SERVICES: ServiceHealth[] = [
     repositoryUrl: "https://github.com/aegis/payment-gateway",
     lastDeployedAt: "14 mins ago",
     activeIncidentsCount: 1,
+    framework: "Node.js 20 / TypeScript",
+    runtimeEnv: "AWS ECS Fargate",
+    slaTargetPercentage: 99.99,
+    endpoints: [
+      { method: "POST", path: "/api/v1/checkout/charge", p99LatencyMs: 1650, errorRatePercentage: 18.5, status: "failing" },
+      { method: "POST", path: "/api/v1/webhooks/stripe", p99LatencyMs: 820, errorRatePercentage: 4.2, status: "degraded" },
+      { method: "GET", path: "/health", p99LatencyMs: 12, errorRatePercentage: 0.0, status: "nominal" },
+    ],
+    upstreamDependencies: [
+      { serviceId: "srv-order", serviceName: "order-processor", type: "upstream", healthStatus: "degraded", protocol: "HTTP/REST", avgLatencyMs: 190 },
+    ],
+    downstreamDependencies: [
+      { serviceId: "srv-db-user", serviceName: "user-db-cluster", type: "downstream", healthStatus: "healthy", protocol: "MongoDB", avgLatencyMs: 14 },
+      { serviceId: "srv-auth", serviceName: "auth-service", type: "downstream", healthStatus: "healthy", protocol: "HTTP/REST", avgLatencyMs: 42 },
+    ],
   },
   {
     id: "srv-order",
@@ -48,6 +75,18 @@ export const MOCK_SERVICES: ServiceHealth[] = [
     repositoryUrl: "https://github.com/aegis/order-processor",
     lastDeployedAt: "2 hours ago",
     activeIncidentsCount: 1,
+    framework: "Node.js 20 / BullMQ",
+    runtimeEnv: "AWS ECS Fargate",
+    slaTargetPercentage: 99.9,
+    endpoints: [
+      { method: "POST", path: "/api/v1/orders", p99LatencyMs: 320, errorRatePercentage: 2.8, status: "degraded" },
+      { method: "GET", path: "/api/v1/orders/:id", p99LatencyMs: 45, errorRatePercentage: 0.0, status: "nominal" },
+    ],
+    upstreamDependencies: [],
+    downstreamDependencies: [
+      { serviceId: "srv-payment", serviceName: "payment-gateway", type: "downstream", healthStatus: "critical", protocol: "HTTP/REST", avgLatencyMs: 1420 },
+      { serviceId: "srv-notify", serviceName: "notification-worker", type: "downstream", healthStatus: "healthy", protocol: "Kafka", avgLatencyMs: 12 },
+    ],
   },
   {
     id: "srv-notify",
@@ -64,6 +103,16 @@ export const MOCK_SERVICES: ServiceHealth[] = [
     repositoryUrl: "https://github.com/aegis/notification-worker",
     lastDeployedAt: "1 day ago",
     activeIncidentsCount: 0,
+    framework: "Node.js 20 / Redis BullMQ",
+    runtimeEnv: "AWS ECS Fargate",
+    slaTargetPercentage: 99.5,
+    endpoints: [
+      { method: "POST", path: "/internal/notifications/send", p99LatencyMs: 18, errorRatePercentage: 0.05, status: "nominal" },
+    ],
+    upstreamDependencies: [
+      { serviceId: "srv-order", serviceName: "order-processor", type: "upstream", healthStatus: "degraded", protocol: "Kafka", avgLatencyMs: 12 },
+    ],
+    downstreamDependencies: [],
   },
   {
     id: "srv-db-user",
@@ -80,6 +129,15 @@ export const MOCK_SERVICES: ServiceHealth[] = [
     repositoryUrl: "https://github.com/aegis/infra-db-user",
     lastDeployedAt: "5 days ago",
     activeIncidentsCount: 0,
+    framework: "MongoDB Atlas 7.0 Enterprise",
+    runtimeEnv: "AWS us-east-1 Cluster",
+    slaTargetPercentage: 99.999,
+    endpoints: [],
+    upstreamDependencies: [
+      { serviceId: "srv-auth", serviceName: "auth-service", type: "upstream", healthStatus: "healthy", protocol: "MongoDB", avgLatencyMs: 8 },
+      { serviceId: "srv-payment", serviceName: "payment-gateway", type: "upstream", healthStatus: "critical", protocol: "MongoDB", avgLatencyMs: 14 },
+    ],
+    downstreamDependencies: [],
   },
   {
     id: "srv-recommendation",
@@ -96,5 +154,13 @@ export const MOCK_SERVICES: ServiceHealth[] = [
     repositoryUrl: "https://github.com/aegis/recommendation-engine",
     lastDeployedAt: "3 hours ago",
     activeIncidentsCount: 0,
+    framework: "Python 3.11 / Qdrant",
+    runtimeEnv: "AWS ECS Fargate (GPU)",
+    slaTargetPercentage: 99.9,
+    endpoints: [
+      { method: "POST", path: "/v1/recommendations/rank", p99LatencyMs: 110, errorRatePercentage: 0.12, status: "nominal" },
+    ],
+    upstreamDependencies: [],
+    downstreamDependencies: [],
   },
 ];

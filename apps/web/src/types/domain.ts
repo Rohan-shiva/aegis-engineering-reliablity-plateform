@@ -1,6 +1,23 @@
 import { StatusType } from "@/components/ui/StatusBadge";
 import { SeverityType } from "@/components/ui/SeverityBadge";
 
+export interface ServiceEndpoint {
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+  path: string;
+  p99LatencyMs: number;
+  errorRatePercentage: number;
+  status: "nominal" | "degraded" | "failing";
+}
+
+export interface ServiceDependency {
+  serviceId: string;
+  serviceName: string;
+  type: "upstream" | "downstream";
+  healthStatus: StatusType;
+  protocol: "HTTP/REST" | "gRPC" | "Redis" | "MongoDB" | "Kafka";
+  avgLatencyMs: number;
+}
+
 export interface ServiceHealth {
   id: string;
   name: string;
@@ -16,6 +33,14 @@ export interface ServiceHealth {
   repositoryUrl: string;
   lastDeployedAt: string;
   activeIncidentsCount: number;
+
+  // Extended detail fields
+  framework?: string;
+  runtimeEnv?: string;
+  slaTargetPercentage?: number;
+  endpoints?: ServiceEndpoint[];
+  upstreamDependencies?: ServiceDependency[];
+  downstreamDependencies?: ServiceDependency[];
 }
 
 export interface IncidentTimelineEvent {
@@ -29,15 +54,15 @@ export interface IncidentTimelineEvent {
 
 export interface Incident {
   id: string;
-  code: string; // e.g., INC-8492
+  code: string;
   title: string;
   severity: SeverityType;
   status: "active" | "investigating" | "mitigated" | "resolved";
-  affectedServices: string[]; // Service IDs or names
+  affectedServices: string[];
   summary: string;
   impactDescription: string;
   rootCauseHypothesis?: string;
-  confidenceScore?: number; // 0..100
+  confidenceScore?: number;
   createdAt: string;
   updatedAt: string;
   assignedTo: {
@@ -62,14 +87,14 @@ export interface Deployment {
   };
   deployedAt: string;
   status: "success" | "failed" | "in_progress" | "rolled_back";
-  riskScore: number; // 0..100
+  riskScore: number;
   riskLevel: "LOW" | "MEDIUM" | "HIGH";
   riskFactors: string[];
 }
 
 export interface TelemetryDatapoint {
-  timestamp: string; // ISO string or time label e.g., "14:00"
-  errorRate: number; // percentage
+  timestamp: string;
+  errorRate: number;
   p99LatencyMs: number;
   requestVolume: number;
 }
