@@ -34,7 +34,6 @@ export interface ServiceHealth {
   lastDeployedAt: string;
   activeIncidentsCount: number;
 
-  // Extended detail fields
   framework?: string;
   runtimeEnv?: string;
   slaTargetPercentage?: number;
@@ -50,6 +49,21 @@ export interface IncidentTimelineEvent {
   description: string;
   type: "detection" | "mitigation" | "investigation" | "update" | "resolution";
   author: string;
+}
+
+export interface TelemetrySnapshot {
+  metricName: string;
+  valueAtDetection: string;
+  threshold: string;
+  unit: string;
+}
+
+export interface IncidentEvidence {
+  id: string;
+  type: "log" | "metric" | "deployment" | "runbook";
+  title: string;
+  snippet: string;
+  source: string;
 }
 
 export interface Incident {
@@ -71,6 +85,14 @@ export interface Incident {
     avatarInitials: string;
   };
   timeline: IncidentTimelineEvent[];
+
+  // Extended fields for Incident Room
+  communicationChannel?: string;
+  runbookUrl?: string;
+  postmortemStatus?: "pending" | "generated" | "none";
+  telemetrySnapshots?: TelemetrySnapshot[];
+  evidences?: IncidentEvidence[];
+  tags?: string[];
 }
 
 export interface Deployment {
