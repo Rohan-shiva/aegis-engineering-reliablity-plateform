@@ -16,11 +16,26 @@ export const MOCK_DEPLOYMENTS: Deployment[] = [
     status: "failed",
     riskScore: 82,
     riskLevel: "HIGH",
+    durationSeconds: 145,
+    rollbackSha: "v2.4.1",
+    affectedServicesCount: 2,
     riskFactors: [
       "Payment service modified",
       "Database schema query altered",
       "Affected downstream service: order-processor",
       "Similar deployment previously triggered SEV-2 incident",
+    ],
+    riskSignals: [
+      { id: "sig-1", category: "payment", title: "Core Payment Ledger Code Modified", description: "Modified Stripe payment processing pipeline in payment-gateway.", weight: 30 },
+      { id: "sig-2", category: "database", title: "PostgreSQL Index Altered", description: "Altered index definitions on ledger_entries table without backwards compatibility test.", weight: 25 },
+      { id: "sig-3", category: "historical_incident", title: "Historical Incident Pattern Match", description: "Matches 85% similarity with past SEV-2 incident INC-7291 (index lock contention).", weight: 15 },
+      { id: "sig-4", category: "dependency", title: "Downstream Cascade Risk", description: "Order processing checkout flow depends directly on payment-gateway response latency.", weight: 12 },
+    ],
+    changedFiles: [
+      { filename: "src/services/stripeLedger.ts", additions: 142, deletions: 65, status: "modified", isHighRisk: true },
+      { filename: "migrations/20260905_alter_ledger_index.sql", additions: 28, deletions: 4, status: "added", isHighRisk: true },
+      { filename: "src/types/payment.ts", additions: 18, deletions: 2, status: "modified", isHighRisk: false },
+      { filename: "tests/ledger.test.ts", additions: 45, deletions: 12, status: "modified", isHighRisk: false },
     ],
   },
   {
@@ -38,9 +53,18 @@ export const MOCK_DEPLOYMENTS: Deployment[] = [
     status: "success",
     riskScore: 14,
     riskLevel: "LOW",
+    durationSeconds: 88,
+    affectedServicesCount: 1,
     riskFactors: [
       "Low risk non-breaking endpoint addition",
       "100% unit & integration test coverage",
+    ],
+    riskSignals: [
+      { id: "sig-10", category: "auth", title: "Additive OAuth2 Token Endpoint", description: "Added new refresh token rotation without modifying existing login route.", weight: 14 },
+    ],
+    changedFiles: [
+      { filename: "src/routes/oauthRefresh.ts", additions: 85, deletions: 0, status: "added", isHighRisk: false },
+      { filename: "src/utils/jwt.ts", additions: 14, deletions: 6, status: "modified", isHighRisk: false },
     ],
   },
   {
@@ -58,9 +82,18 @@ export const MOCK_DEPLOYMENTS: Deployment[] = [
     status: "success",
     riskScore: 35,
     riskLevel: "MEDIUM",
+    durationSeconds: 210,
+    affectedServicesCount: 1,
     riskFactors: [
       "Vector search configuration parameter change",
       "Verified in staging benchmark environment",
+    ],
+    riskSignals: [
+      { id: "sig-20", category: "dependency", title: "Qdrant Index Parameter Tuning", description: "Adjusted HNSW index M from 16 to 32 for lower query latency.", weight: 35 },
+    ],
+    changedFiles: [
+      { filename: "config/qdrant.yaml", additions: 6, deletions: 6, status: "modified", isHighRisk: false },
+      { filename: "src/vectorSearch.py", additions: 22, deletions: 10, status: "modified", isHighRisk: false },
     ],
   },
   {
@@ -78,9 +111,67 @@ export const MOCK_DEPLOYMENTS: Deployment[] = [
     status: "success",
     riskScore: 28,
     riskLevel: "LOW",
+    durationSeconds: 95,
+    affectedServicesCount: 2,
     riskFactors: [
       "Configuration tweak only",
       "No database schema changes",
+    ],
+    riskSignals: [
+      { id: "sig-30", category: "dependency", title: "Queue Concurrency Adjustment", description: "Increased BullMQ worker pool size from 10 to 25.", weight: 28 },
+    ],
+    changedFiles: [
+      { filename: "src/queue/workerPool.ts", additions: 12, deletions: 8, status: "modified", isHighRisk: false },
+    ],
+  },
+  {
+    id: "dep-105",
+    serviceId: "srv-notify",
+    serviceName: "notification-worker",
+    environment: "PROD",
+    commitSha: "b4c1d29",
+    commitMessage: "feat(templates): update HTML email templates for order receipts",
+    author: {
+      name: "Marcus Vance",
+      githubHandle: "marcusv",
+    },
+    deployedAt: "1 day ago",
+    status: "success",
+    riskScore: 8,
+    riskLevel: "LOW",
+    durationSeconds: 45,
+    affectedServicesCount: 0,
+    riskFactors: ["Static asset template update"],
+    riskSignals: [
+      { id: "sig-40", category: "auth", title: "HTML Template Asset Update", description: "Non-code layout changes in email template rendering.", weight: 8 },
+    ],
+    changedFiles: [
+      { filename: "templates/receipt.html", additions: 35, deletions: 20, status: "modified", isHighRisk: false },
+    ],
+  },
+  {
+    id: "dep-106",
+    serviceId: "srv-db-user",
+    serviceName: "user-db-cluster",
+    environment: "PROD",
+    commitSha: "d9e8f7a",
+    commitMessage: "chore(db): upgrade MongoDB Atlas cluster engine to v7.0.12",
+    author: {
+      name: "DBRE Team",
+      githubHandle: "dbre-team",
+    },
+    deployedAt: "5 days ago",
+    status: "success",
+    riskScore: 42,
+    riskLevel: "MEDIUM",
+    durationSeconds: 620,
+    affectedServicesCount: 4,
+    riskFactors: ["Database engine version upgrade across replica set"],
+    riskSignals: [
+      { id: "sig-50", category: "database", title: "Database Engine Upgrade", description: "Minor patch upgrade to MongoDB Atlas replica set.", weight: 42 },
+    ],
+    changedFiles: [
+      { filename: "terraform/mongodb_cluster.tf", additions: 4, deletions: 4, status: "modified", isHighRisk: true },
     ],
   },
 ];

@@ -86,13 +86,28 @@ export interface Incident {
   };
   timeline: IncidentTimelineEvent[];
 
-  // Extended fields for Incident Room
   communicationChannel?: string;
   runbookUrl?: string;
   postmortemStatus?: "pending" | "generated" | "none";
   telemetrySnapshots?: TelemetrySnapshot[];
   evidences?: IncidentEvidence[];
   tags?: string[];
+}
+
+export interface DeploymentChangedFile {
+  filename: string;
+  additions: number;
+  deletions: number;
+  status: "modified" | "added" | "deleted";
+  isHighRisk?: boolean;
+}
+
+export interface DeploymentRiskSignal {
+  id: string;
+  category: "database" | "payment" | "auth" | "dependency" | "historical_incident";
+  title: string;
+  description: string;
+  weight: number;
 }
 
 export interface Deployment {
@@ -112,6 +127,13 @@ export interface Deployment {
   riskScore: number;
   riskLevel: "LOW" | "MEDIUM" | "HIGH";
   riskFactors: string[];
+
+  // Extended deployment details
+  changedFiles?: DeploymentChangedFile[];
+  riskSignals?: DeploymentRiskSignal[];
+  affectedServicesCount?: number;
+  durationSeconds?: number;
+  rollbackSha?: string;
 }
 
 export interface TelemetryDatapoint {
