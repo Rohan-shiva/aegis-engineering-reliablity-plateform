@@ -128,12 +128,38 @@ export interface Deployment {
   riskLevel: "LOW" | "MEDIUM" | "HIGH";
   riskFactors: string[];
 
-  // Extended deployment details
   changedFiles?: DeploymentChangedFile[];
   riskSignals?: DeploymentRiskSignal[];
   affectedServicesCount?: number;
   durationSeconds?: number;
   rollbackSha?: string;
+}
+
+export interface VectorChunkPreview {
+  id: string;
+  chunkIndex: number;
+  textSnippet: string;
+  tokenCount: number;
+  embeddingVectorDimension: number;
+  section: string;
+}
+
+export interface KnowledgeDocument {
+  id: string;
+  title: string;
+  description: string;
+  type: "runbook" | "postmortem" | "architecture_doc" | "incident_report";
+  source: "github" | "confluence" | "upload";
+  author: string;
+  updatedAt: string;
+  ingestionStatus: "indexed" | "indexing" | "failed";
+  vectorChunksCount: number;
+  tags: string[];
+  contentMarkdown: string;
+  linkedServices: string[];
+  linkedIncidents: string[];
+  fileSize: string;
+  vectorChunks?: VectorChunkPreview[];
 }
 
 export interface TelemetryDatapoint {
