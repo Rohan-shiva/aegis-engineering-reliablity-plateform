@@ -162,6 +162,49 @@ export interface KnowledgeDocument {
   vectorChunks?: VectorChunkPreview[];
 }
 
+export interface AIToolCall {
+  id: string;
+  toolName: "getRecentDeployments" | "queryLogs" | "searchKnowledge" | "getServiceDependencies" | "getRunbook";
+  args: Record<string, string | number | boolean>;
+  status: "success" | "executing" | "failed";
+  executionTimeMs: number;
+  resultSummary: string;
+}
+
+export interface AIHypothesis {
+  id: string;
+  rank: number;
+  title: string;
+  confidencePercentage: number;
+  reasoningText: string;
+  isPrimary: boolean;
+  evidenceCategory: string;
+}
+
+export interface AISourceCitation {
+  id: string;
+  title: string;
+  url: string;
+  type: "runbook" | "commit" | "log" | "metric";
+  relevanceScore: number;
+}
+
+export interface AIInvestigation {
+  id: string;
+  title: string;
+  targetIncidentCode?: string;
+  targetServiceName?: string;
+  status: "analyzing" | "completed" | "requires_input";
+  confidenceScore: number;
+  createdAt: string;
+  updatedAt: string;
+  plannerThought: string;
+  hypotheses: AIHypothesis[];
+  toolCalls: AIToolCall[];
+  citations: AISourceCitation[];
+  recommendedActions: string[];
+}
+
 export interface TelemetryDatapoint {
   timestamp: string;
   errorRate: number;
