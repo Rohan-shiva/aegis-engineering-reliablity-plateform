@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { config } from "./config/env";
 import healthRoutes from "./routes/healthRoutes";
 import servicesRoutes from "./routes/servicesRoutes";
+import incidentsRoutes from "./routes/incidentsRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
 
 export function createApp(): Express {
@@ -20,6 +21,7 @@ export function createApp(): Express {
   const apiPrefix = `/api/${config.apiVersion}`;
   app.use(apiPrefix, healthRoutes);
   app.use(apiPrefix, servicesRoutes);
+  app.use(apiPrefix, incidentsRoutes);
 
   // Centralized Error Handling
   app.use(errorHandler);
