@@ -5,7 +5,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { KnowledgeCatalogHeader } from "@/components/knowledge/KnowledgeCatalogHeader";
 import { KnowledgeCard } from "@/components/knowledge/KnowledgeCard";
 import { KnowledgeTable } from "@/components/knowledge/KnowledgeTable";
-import { MOCK_KNOWLEDGE_DOCUMENTS } from "@/mocks";
+import { useKnowledge } from "@/hooks/useKnowledge";
+import { SkeletonGrid } from "@/components/common/SkeletonCard";
+import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { BookOpen } from "lucide-react";
 
 export default function KnowledgeCatalogPage() {
@@ -14,23 +16,16 @@ export default function KnowledgeCatalogPage() {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
-  const filteredDocs = MOCK_KNOWLEDGE_DOCUMENTS.filter((doc) => {
-    const matchesSearch =
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      doc.author.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesType = selectedType === "all" || doc.type === selectedType;
-    const matchesStatus = selectedStatus === "all" || doc.ingestionStatus === selectedStatus;
-
-    return matchesSearch && matchesType && matchesStatus;
+  const { documents, loading, isLive } = useKnowledge({
+    type: selectedType,
+    status: selectedStatus,
+    search: searchQuery,
   });
 
-  const indexedCount = MOCK_KNOWLEDGE_DOCUMENTS.filter((d) => d.ingestionStatus === "indexed").length;
+  const indexedCount = documents.filter((d) => d.ingestionStatus === "indexed").length;
 
   return (
-    <AppShell>
+    <AppShell isLive={isLive}>
       {/* Header Toolbar */}
       <KnowledgeCatalogHeader
         viewMode={viewMode}
@@ -41,12 +36,14 @@ export default function KnowledgeCatalogPage() {
         onTypeChange={setSelectedType}
         selectedStatus={selectedStatus}
         onStatusChange={setSelectedStatus}
-        totalDocsCount={MOCK_KNOWLEDGE_DOCUMENTS.length}
+        totalDocsCount={documents.length}
         indexedCount={indexedCount}
       />
 
       {/* Main Content */}
-      {filteredDocs.length === 0 ? (
+      {loading ? (
+        viewMode === "grid" ? <SkeletonGrid count={6} /> : <TableSkeleton rows={6} />
+      ) : documents.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-slate-800 rounded-lg bg-slate-950/40">
           <BookOpen className="h-10 w-10 text-slate-600 mb-3" />
           <h3 className="font-mono text-sm font-semibold text-slate-300">No Knowledge Documents Found</h3>
@@ -56,12 +53,12 @@ export default function KnowledgeCatalogPage() {
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredDocs.map((doc) => (
+          {documents.map((doc) => (
             <KnowledgeCard key={doc.id} document={doc} />
           ))}
         </div>
       ) : (
-        <KnowledgeTable documents={filteredDocs} />
+        <KnowledgeTable documents={documents} />
       )}
     </AppShell>
   );

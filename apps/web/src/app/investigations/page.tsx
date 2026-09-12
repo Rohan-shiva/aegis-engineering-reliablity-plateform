@@ -5,7 +5,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { InvestigationCatalogHeader } from "@/components/investigations/InvestigationCatalogHeader";
 import { InvestigationCard } from "@/components/investigations/InvestigationCard";
 import { InvestigationTable } from "@/components/investigations/InvestigationTable";
-import { MOCK_INVESTIGATIONS } from "@/mocks";
+import { useInvestigations } from "@/hooks/useInvestigations";
+import { SkeletonGrid } from "@/components/common/SkeletonCard";
+import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { Bot } from "lucide-react";
 
 export default function InvestigationsCatalogPage() {
@@ -14,27 +16,23 @@ export default function InvestigationsCatalogPage() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedService, setSelectedService] = useState("all");
 
-  const services = Array.from(
-    new Set(MOCK_INVESTIGATIONS.map((i) => i.targetServiceName).filter(Boolean) as string[])
-  );
-
-  const filteredInvestigations = MOCK_INVESTIGATIONS.filter((inv) => {
-    const matchesSearch =
-      inv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.plannerThought.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.hypotheses.some((h) => h.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (inv.targetIncidentCode && inv.targetIncidentCode.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    const matchesStatus = selectedStatus === "all" || inv.status === selectedStatus;
-    const matchesService = selectedService === "all" || inv.targetServiceName === selectedService;
-
-    return matchesSearch && matchesStatus && matchesService;
+  const { investigations, loading, isLive } = useInvestigations({
+    status: selectedStatus,
+    search: searchQuery,
   });
 
-  const analyzingCount = MOCK_INVESTIGATIONS.filter((i) => i.status === "analyzing").length;
+  const services = Array.from(
+    new Set(investigations.map((i) => i.targetServiceName).filter(Boolean) as string[])
+  );
+
+  const filteredInvestigations = investigations.filter((inv) => {
+    return selectedService === "all" || inv.targetServiceName === selectedService;
+  });
+
+  const analyzingCount = investigations.filter((i) => i.status === "analyzing").length;
 
   return (
-    <AppShell>
+    <AppShell isLive={isLive}>
       {/* Header Toolbar */}
       <InvestigationCatalogHeader
         viewMode={viewMode}
@@ -46,12 +44,14 @@ export default function InvestigationsCatalogPage() {
         selectedService={selectedService}
         onServiceChange={setSelectedService}
         services={services}
-        totalInvestigationsCount={MOCK_INVESTIGATIONS.length}
+        totalInvestigationsCount={investigations.length}
         analyzingCount={analyzingCount}
       />
 
       {/* Main Content */}
-      {filteredInvestigations.length === 0 ? (
+      {loading ? (
+        viewMode === "grid" ? <SkeletonGrid count={6} /> : <TableSkeleton rows={6} />
+      ) : filteredInvestigations.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-slate-800 rounded-lg bg-slate-950/40">
           <Bot className="h-10 w-10 text-slate-600 mb-3" />
           <h3 className="font-mono text-sm font-semibold text-slate-300">No AI Investigations Found</h3>
