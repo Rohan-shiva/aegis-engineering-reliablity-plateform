@@ -1,12 +1,14 @@
 import React from "react";
 import { ShieldAlert, Search, Bell, ChevronDown, Activity } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ApiConnectionBadge } from "@/components/common/ApiConnectionBadge";
 
 interface TopNavProps {
   onToggleMobileSidebar?: () => void;
+  isLive?: boolean;
 }
 
-export const TopNav: React.FC<TopNavProps> = ({ onToggleMobileSidebar }) => {
+export const TopNav: React.FC<TopNavProps> = ({ onToggleMobileSidebar, isLive = true }) => {
   return (
     <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-slate-800 bg-surface/90 px-4 backdrop-blur-md">
       {/* Left section: Logo & Context Selectors */}
@@ -63,8 +65,10 @@ export const TopNav: React.FC<TopNavProps> = ({ onToggleMobileSidebar }) => {
         </div>
       </div>
 
-      {/* Right section: Environment status & User Profile */}
+      {/* Right section: Environment status, API Connection Badge & User Profile */}
       <div className="flex items-center gap-3">
+        <ApiConnectionBadge isLive={isLive} />
+
         {/* Environment Indicator */}
         <div className="hidden items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-950/30 px-2.5 py-1 text-[11px] font-mono text-emerald-400 sm:flex">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
