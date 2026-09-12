@@ -7,6 +7,8 @@ import healthRoutes from "./routes/healthRoutes";
 import servicesRoutes from "./routes/servicesRoutes";
 import incidentsRoutes from "./routes/incidentsRoutes";
 import deploymentsRoutes from "./routes/deploymentsRoutes";
+import knowledgeRoutes from "./routes/knowledgeRoutes";
+import investigationsRoutes from "./routes/investigationsRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
 
 export function createApp(): Express {
@@ -24,6 +26,8 @@ export function createApp(): Express {
   app.use(apiPrefix, servicesRoutes);
   app.use(apiPrefix, incidentsRoutes);
   app.use(apiPrefix, deploymentsRoutes);
+  app.use(apiPrefix, knowledgeRoutes);
+  app.use(apiPrefix, investigationsRoutes);
 
   // Centralized Error Handling
   app.use(errorHandler);
