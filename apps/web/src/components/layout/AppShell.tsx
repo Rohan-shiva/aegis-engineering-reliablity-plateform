@@ -7,15 +7,16 @@ import { X } from "lucide-react";
 
 interface AppShellProps {
   children: React.ReactNode;
+  isLive?: boolean;
 }
 
-export const AppShell: React.FC<AppShellProps> = ({ children }) => {
+export const AppShell: React.FC<AppShellProps> = ({ children, isLive = false }) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background text-slate-100 flex flex-col font-sans">
       {/* Top Header Navigation */}
-      <TopNav onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)} />
+      <TopNav onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)} isLive={isLive} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop Left Sidebar */}

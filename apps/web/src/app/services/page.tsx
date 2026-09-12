@@ -5,7 +5,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { ServiceCatalogHeader } from "@/components/services/ServiceCatalogHeader";
 import { ServiceCard } from "@/components/services/ServiceCard";
 import { ServiceTable } from "@/components/services/ServiceTable";
-import { MOCK_SERVICES } from "@/mocks";
+import { useServices } from "@/hooks/useServices";
+import { SkeletonGrid } from "@/components/common/SkeletonCard";
+import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { Server } from "lucide-react";
 
 export default function ServicesCatalogPage() {
@@ -14,24 +16,19 @@ export default function ServicesCatalogPage() {
   const [selectedEnv, setSelectedEnv] = useState("all");
   const [selectedTeam, setSelectedTeam] = useState("all");
 
-  const teams = Array.from(new Set(MOCK_SERVICES.map((s) => s.ownerTeam)));
+  const { services, loading, isLive } = useServices({ search: searchQuery });
 
-  const filteredServices = MOCK_SERVICES.filter((service) => {
-    const matchesSearch =
-      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.ownerTeam.toLowerCase().includes(searchQuery.toLowerCase());
+  const teams = Array.from(new Set(services.map((s) => s.ownerTeam)));
 
+  const filteredServices = services.filter((service) => {
     const matchesEnv =
       selectedEnv === "all" || service.environment.toLowerCase() === selectedEnv.toLowerCase();
-
     const matchesTeam = selectedTeam === "all" || service.ownerTeam === selectedTeam;
-
-    return matchesSearch && matchesEnv && matchesTeam;
+    return matchesEnv && matchesTeam;
   });
 
   return (
-    <AppShell>
+    <AppShell isLive={isLive}>
       {/* Header Toolbar */}
       <ServiceCatalogHeader
         viewMode={viewMode}
@@ -43,11 +40,13 @@ export default function ServicesCatalogPage() {
         selectedTeam={selectedTeam}
         onTeamChange={setSelectedTeam}
         teams={teams}
-        totalServicesCount={MOCK_SERVICES.length}
+        totalServicesCount={services.length}
       />
 
       {/* Main Content Area */}
-      {filteredServices.length === 0 ? (
+      {loading ? (
+        viewMode === "grid" ? <SkeletonGrid count={6} /> : <TableSkeleton rows={6} />
+      ) : filteredServices.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-slate-800 rounded-lg bg-slate-950/40">
           <Server className="h-10 w-10 text-slate-600 mb-3" />
           <h3 className="font-mono text-sm font-semibold text-slate-300">No Services Found</h3>
