@@ -6,6 +6,7 @@ import { config } from "./config/env";
 import healthRoutes from "./routes/healthRoutes";
 import servicesRoutes from "./routes/servicesRoutes";
 import incidentsRoutes from "./routes/incidentsRoutes";
+import deploymentsRoutes from "./routes/deploymentsRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
 
 export function createApp(): Express {
@@ -22,6 +23,7 @@ export function createApp(): Express {
   app.use(apiPrefix, healthRoutes);
   app.use(apiPrefix, servicesRoutes);
   app.use(apiPrefix, incidentsRoutes);
+  app.use(apiPrefix, deploymentsRoutes);
 
   // Centralized Error Handling
   app.use(errorHandler);
