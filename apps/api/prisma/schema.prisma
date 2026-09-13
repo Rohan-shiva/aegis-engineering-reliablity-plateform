@@ -1,0 +1,237 @@
+// Aegis Platform — PostgreSQL Database Schema (Prisma ORM)
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ServiceStatus {
+  healthy
+  degraded
+  critical
+  nominal
+  failing
+  unknown
+}
+
+enum SeverityLevel {
+  SEV1
+  SEV2
+  SEV3
+  SEV4
+}
+
+enum IncidentStatus {
+  active
+  investigating
+  mitigated
+  resolved
+}
+
+enum DeploymentStatus {
+  success
+  failed
+  in_progress
+  rolled_back
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum DocumentType {
+  runbook
+  postmortem
+  architecture_doc
+  incident_report
+}
+
+enum IngestionStatus {
+  indexed
+  indexing
+  failed
+}
+
+enum InvestigationStatus {
+  analyzing
+  completed
+  requires_input
+}
+
+model Service {
+  id                    String        @id @default(uuid())
+  name                  String        @unique
+  description           String
+  status                ServiceStatus @default(healthy)
+  environment           String        @default("production")
+  latencyP95Ms          Float         @default(0)
+  latencyP99Ms          Float         @default(0)
+  uptimePercentage      Float         @default(100.0)
+  errorRatePercentage   Float         @default(0.0)
+  requestRateRps        Float         @default(0)
+  ownerTeam             String
+  repositoryUrl         String
+  lastDeployedAt        DateTime      @default(now())
+  activeIncidentsCount  Int           @default(0)
+  framework             String?
+  runtimeEnv            String?
+  slaTargetPercentage   Float?        @default(99.9)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  endpoints             ServiceEndpoint[]
+  upstreamDependencies  ServiceDependency[] @relation("UpstreamServices")
+  downstreamDependencies ServiceDependency[] @relation("DownstreamServices")
+  deployments           Deployment[]
+
+  @@map("services")
+}
+
+model ServiceEndpoint {
+  id                  String   @id @default(uuid())
+  serviceId           String
+  method              String
+  path                String
+  p99LatencyMs        Float
+  errorRatePercentage Float
+  status              String   @default("nominal")
+
+  service             Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("service_endpoints")
+}
+
+model ServiceDependency {
+  id                  String        @id @default(uuid())
+  upstreamServiceId   String
+  downstreamServiceId String
+  type                String        // "upstream" | "downstream"
+  healthStatus        ServiceStatus @default(healthy)
+  protocol            String        // "HTTP/REST" | "gRPC" | "Redis" | "MongoDB" | "Kafka"
+  avgLatencyMs        Float
+
+  upstreamService     Service       @relation("UpstreamServices", fields: [upstreamServiceId], references: [id], onDelete: Cascade)
+  downstreamService   Service       @relation("DownstreamServices", fields: [downstreamServiceId], references: [id], onDelete: Cascade)
+
+  @@map("service_dependencies")
+}
+
+model Incident {
+  id                   String         @id @default(uuid())
+  code                 String         @unique
+  title                String
+  severity             SeverityLevel  @default(SEV2)
+  status               IncidentStatus @default(investigating)
+  affectedServices     String[]
+  summary              String
+  impactDescription    String
+  rootCauseHypothesis  String?
+  confidenceScore      Float?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  assignedToName       String
+  assignedToRole       String
+  assignedToInitials   String
+  communicationChannel String?
+  runbookUrl           String?
+  postmortemStatus     String?        @default("pending")
+  tags                 String[]
+
+  timeline             IncidentTimeline[]
+
+  @@map("incidents")
+}
+
+model IncidentTimeline {
+  id          String   @id @default(uuid())
+  incidentId  String
+  timestamp   DateTime @default(now())
+  title       String
+  description String
+  type        String   // "detection" | "mitigation" | "investigation" | "update" | "resolution"
+  author      String
+
+  incident    Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@map("incident_timelines")
+}
+
+model Deployment {
+  id                   String           @id @default(uuid())
+  serviceId            String
+  serviceName          String
+  environment          String           @default("PROD")
+  commitSha            String           @unique
+  commitMessage        String
+  authorName           String
+  authorGithubHandle   String
+  authorAvatarUrl      String?
+  deployedAt           DateTime         @default(now())
+  status               DeploymentStatus @default(success)
+  riskScore            Int              @default(0)
+  riskLevel            RiskLevel        @default(LOW)
+  riskFactors          String[]
+  durationSeconds      Int?
+
+  service              Service          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  changedFiles         DeploymentChangedFile[]
+
+  @@map("deployments")
+}
+
+model DeploymentChangedFile {
+  id           String     @id @default(uuid())
+  deploymentId String
+  filename     String
+  additions    Int
+  deletions    Int
+  status       String     // "modified" | "added" | "deleted"
+  isHighRisk   Boolean    @default(false)
+
+  deployment   Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+
+  @@map("deployment_changed_files")
+}
+
+model KnowledgeDocument {
+  id                 String          @id @default(uuid())
+  title              String
+  description        String
+  type               DocumentType    @default(runbook)
+  source             String          @default("github")
+  author             String
+  updatedAt          DateTime        @updatedAt
+  ingestionStatus    IngestionStatus @default(indexed)
+  vectorChunksCount  Int             @default(0)
+  tags               String[]
+  contentMarkdown    String
+  linkedServices     String[]
+  linkedIncidents    String[]
+  fileSize           String
+
+  @@map("knowledge_documents")
+}
+
+model AIInvestigation {
+  id                 String              @id @default(uuid())
+  title              String
+  targetIncidentCode String?
+  targetServiceName  String?
+  status             InvestigationStatus @default(analyzing)
+  confidenceScore    Float               @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  plannerThought     String
+  hypothesesJson     Json
+  toolCallsJson      Json
+  citationsJson      Json
+  recommendedActions String[]
+
+  @@map("ai_investigations")
+}
