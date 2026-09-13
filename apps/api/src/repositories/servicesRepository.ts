@@ -1,4 +1,5 @@
 import { ServiceHealth } from "@aegis/types";
+import { DatabaseClient, db } from "../db/client";
 
 const MOCK_SERVICES: ServiceHealth[] = [
   {
@@ -74,7 +75,24 @@ const MOCK_SERVICES: ServiceHealth[] = [
 ];
 
 export class ServicesRepository {
-  public static getAll(filters?: { status?: string; search?: string }): ServiceHealth[] {
+  public static async getAll(filters?: { status?: string; search?: string }): Promise<ServiceHealth[]> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const whereClause: any = {};
+        if (filters?.status) whereClause.status = filters.status;
+        if (filters?.search) {
+          whereClause.OR = [
+            { name: { contains: filters.search, mode: "insensitive" } },
+            { description: { contains: filters.search, mode: "insensitive" } },
+          ];
+        }
+        const records = await db.service.findMany({ where: whereClause });
+        if (records.length > 0) return records;
+      } catch (err) {
+        console.warn("[ServicesRepository] DB query failed, using memory fallback:", err);
+      }
+    }
+
     let result = [...MOCK_SERVICES];
     if (filters?.status) {
       result = result.filter((s) => s.status === filters.status);
@@ -86,7 +104,18 @@ export class ServicesRepository {
     return result;
   }
 
-  public static getById(id: string): ServiceHealth | undefined {
+  public static async getById(id: string): Promise<ServiceHealth | undefined> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const record = await db.service.findFirst({
+          where: { OR: [{ id }, { name: id }] },
+        });
+        if (record) return record;
+      } catch (err) {
+        console.warn("[ServicesRepository] DB lookup failed, using memory fallback:", err);
+      }
+    }
+
     return MOCK_SERVICES.find((s) => s.id === id || s.name === id);
   }
 }

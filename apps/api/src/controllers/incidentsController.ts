@@ -3,13 +3,13 @@ import { IncidentsRepository } from "../repositories/incidentsRepository";
 import { sendSuccess } from "../utils/response";
 import { NotFoundError } from "../errors/AppError";
 
-export function listIncidents(req: Request, res: Response, next: NextFunction): void {
+export async function listIncidents(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const severity = req.query.severity as string | undefined;
     const status = req.query.status as string | undefined;
     const search = req.query.search as string | undefined;
 
-    const incidents = IncidentsRepository.getAll({ severity, status, search });
+    const incidents = await IncidentsRepository.getAll({ severity, status, search });
     sendSuccess(res, incidents, {
       total: incidents.length,
       page: 1,
@@ -23,10 +23,10 @@ export function listIncidents(req: Request, res: Response, next: NextFunction): 
   }
 }
 
-export function getIncidentById(req: Request, res: Response, next: NextFunction): void {
+export async function getIncidentById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = req.params.id;
-    const incident = IncidentsRepository.getById(id);
+    const incident = await IncidentsRepository.getById(id);
     if (!incident) {
       throw new NotFoundError(`Incident with ID or Code '${id}' was not found`);
     }

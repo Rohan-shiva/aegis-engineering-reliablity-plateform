@@ -1,4 +1,5 @@
 import { Incident } from "@aegis/types";
+import { DatabaseClient, db } from "../db/client";
 
 const MOCK_INCIDENTS: Incident[] = [
   {
@@ -50,7 +51,25 @@ const MOCK_INCIDENTS: Incident[] = [
 ];
 
 export class IncidentsRepository {
-  public static getAll(filters?: { severity?: string; status?: string; search?: string }): Incident[] {
+  public static async getAll(filters?: { severity?: string; status?: string; search?: string }): Promise<Incident[]> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const whereClause: any = {};
+        if (filters?.severity) whereClause.severity = filters.severity;
+        if (filters?.status) whereClause.status = filters.status;
+        if (filters?.search) {
+          whereClause.OR = [
+            { code: { contains: filters.search, mode: "insensitive" } },
+            { title: { contains: filters.search, mode: "insensitive" } },
+          ];
+        }
+        const records = await db.incident.findMany({ where: whereClause });
+        if (records.length > 0) return records;
+      } catch (err) {
+        console.warn("[IncidentsRepository] DB query failed, using memory fallback:", err);
+      }
+    }
+
     let result = [...MOCK_INCIDENTS];
     if (filters?.severity) {
       result = result.filter((i) => i.severity === filters.severity);
@@ -65,7 +84,18 @@ export class IncidentsRepository {
     return result;
   }
 
-  public static getById(id: string): Incident | undefined {
+  public static async getById(id: string): Promise<Incident | undefined> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const record = await db.incident.findFirst({
+          where: { OR: [{ id }, { code: id }] },
+        });
+        if (record) return record;
+      } catch (err) {
+        console.warn("[IncidentsRepository] DB lookup failed, using memory fallback:", err);
+      }
+    }
+
     return MOCK_INCIDENTS.find((i) => i.id === id || i.code === id);
   }
 }
