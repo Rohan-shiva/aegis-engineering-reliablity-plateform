@@ -16,7 +16,8 @@
     "type-check:web": "npm run type-check --workspace=apps/web",
     "type-check:api": "npm run type-check --workspace=apps/api",
     "type-check:types": "npm run type-check --workspace=packages/types",
-    "type-check": "npm run type-check:types && npm run type-check:api && npm run type-check:web"
+    "type-check": "npm run type-check:types && npm run type-check:api && npm run type-check:web",
+    "db:seed": "npm run db:seed --workspace=apps/api"
   },
   "devDependencies": {}
 }
