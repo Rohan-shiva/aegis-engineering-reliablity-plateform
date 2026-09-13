@@ -3,12 +3,12 @@ import { InvestigationsRepository } from "../repositories/investigationsReposito
 import { sendSuccess } from "../utils/response";
 import { NotFoundError } from "../errors/AppError";
 
-export function listInvestigations(req: Request, res: Response, next: NextFunction): void {
+export async function listInvestigations(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const status = req.query.status as string | undefined;
     const search = req.query.search as string | undefined;
 
-    const items = InvestigationsRepository.getAll({ status, search });
+    const items = await InvestigationsRepository.getAll({ status, search });
     sendSuccess(res, items, {
       total: items.length,
       page: 1,
@@ -22,10 +22,10 @@ export function listInvestigations(req: Request, res: Response, next: NextFuncti
   }
 }
 
-export function getInvestigationById(req: Request, res: Response, next: NextFunction): void {
+export async function getInvestigationById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = req.params.id;
-    const inv = InvestigationsRepository.getById(id);
+    const inv = await InvestigationsRepository.getById(id);
     if (!inv) {
       throw new NotFoundError(`AI Investigation with ID '${id}' was not found`);
     }

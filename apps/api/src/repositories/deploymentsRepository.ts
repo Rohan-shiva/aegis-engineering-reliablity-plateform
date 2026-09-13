@@ -1,4 +1,5 @@
 import { Deployment } from "@aegis/types";
+import { DatabaseClient, db } from "../db/client";
 
 const MOCK_DEPLOYMENTS: Deployment[] = [
   {
@@ -47,7 +48,20 @@ const MOCK_DEPLOYMENTS: Deployment[] = [
 ];
 
 export class DeploymentsRepository {
-  public static getAll(filters?: { environment?: string; status?: string; minRiskScore?: number }): Deployment[] {
+  public static async getAll(filters?: { environment?: string; status?: string; minRiskScore?: number }): Promise<Deployment[]> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const whereClause: any = {};
+        if (filters?.environment) whereClause.environment = filters.environment;
+        if (filters?.status) whereClause.status = filters.status;
+        if (filters?.minRiskScore !== undefined) whereClause.riskScore = { gte: filters.minRiskScore };
+        const records = await db.deployment.findMany({ where: whereClause });
+        if (records.length > 0) return records;
+      } catch (err) {
+        console.warn("[DeploymentsRepository] DB query failed, using memory fallback:", err);
+      }
+    }
+
     let result = [...MOCK_DEPLOYMENTS];
     if (filters?.environment) {
       result = result.filter((d) => d.environment === filters.environment);
@@ -61,7 +75,18 @@ export class DeploymentsRepository {
     return result;
   }
 
-  public static getById(id: string): Deployment | undefined {
+  public static async getById(id: string): Promise<Deployment | undefined> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const record = await db.deployment.findFirst({
+          where: { OR: [{ id }, { commitSha: id }] },
+        });
+        if (record) return record;
+      } catch (err) {
+        console.warn("[DeploymentsRepository] DB lookup failed, using memory fallback:", err);
+      }
+    }
+
     return MOCK_DEPLOYMENTS.find((d) => d.id === id || d.commitSha === id);
   }
 }

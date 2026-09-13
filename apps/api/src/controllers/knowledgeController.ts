@@ -3,13 +3,13 @@ import { KnowledgeRepository } from "../repositories/knowledgeRepository";
 import { sendSuccess } from "../utils/response";
 import { NotFoundError } from "../errors/AppError";
 
-export function listKnowledge(req: Request, res: Response, next: NextFunction): void {
+export async function listKnowledge(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const type = req.query.type as string | undefined;
     const status = req.query.status as string | undefined;
     const search = req.query.search as string | undefined;
 
-    const docs = KnowledgeRepository.getAll({ type, status, search });
+    const docs = await KnowledgeRepository.getAll({ type, status, search });
     sendSuccess(res, docs, {
       total: docs.length,
       page: 1,
@@ -23,10 +23,10 @@ export function listKnowledge(req: Request, res: Response, next: NextFunction): 
   }
 }
 
-export function getKnowledgeById(req: Request, res: Response, next: NextFunction): void {
+export async function getKnowledgeById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = req.params.id;
-    const doc = KnowledgeRepository.getById(id);
+    const doc = await KnowledgeRepository.getById(id);
     if (!doc) {
       throw new NotFoundError(`Knowledge Document with ID '${id}' was not found`);
     }

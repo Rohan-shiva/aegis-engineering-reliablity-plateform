@@ -1,4 +1,5 @@
 import { KnowledgeDocument } from "@aegis/types";
+import { DatabaseClient, db } from "../db/client";
 
 const MOCK_KNOWLEDGE: KnowledgeDocument[] = [
   {
@@ -36,7 +37,25 @@ const MOCK_KNOWLEDGE: KnowledgeDocument[] = [
 ];
 
 export class KnowledgeRepository {
-  public static getAll(filters?: { type?: string; status?: string; search?: string }): KnowledgeDocument[] {
+  public static async getAll(filters?: { type?: string; status?: string; search?: string }): Promise<KnowledgeDocument[]> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const whereClause: any = {};
+        if (filters?.type) whereClause.type = filters.type;
+        if (filters?.status) whereClause.ingestionStatus = filters.status;
+        if (filters?.search) {
+          whereClause.OR = [
+            { title: { contains: filters.search, mode: "insensitive" } },
+            { description: { contains: filters.search, mode: "insensitive" } },
+          ];
+        }
+        const records = await db.knowledgeDocument.findMany({ where: whereClause });
+        if (records.length > 0) return records;
+      } catch (err) {
+        console.warn("[KnowledgeRepository] DB query failed, using memory fallback:", err);
+      }
+    }
+
     let result = [...MOCK_KNOWLEDGE];
     if (filters?.type) {
       result = result.filter((k) => k.type === filters.type);
@@ -51,7 +70,16 @@ export class KnowledgeRepository {
     return result;
   }
 
-  public static getById(id: string): KnowledgeDocument | undefined {
+  public static async getById(id: string): Promise<KnowledgeDocument | undefined> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const record = await db.knowledgeDocument.findUnique({ where: { id } });
+        if (record) return record;
+      } catch (err) {
+        console.warn("[KnowledgeRepository] DB lookup failed, using memory fallback:", err);
+      }
+    }
+
     return MOCK_KNOWLEDGE.find((k) => k.id === id);
   }
 }

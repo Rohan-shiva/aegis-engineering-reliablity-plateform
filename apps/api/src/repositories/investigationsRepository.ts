@@ -1,4 +1,5 @@
 import { AIInvestigation } from "@aegis/types";
+import { DatabaseClient, db } from "../db/client";
 
 const MOCK_INVESTIGATIONS: AIInvestigation[] = [
   {
@@ -52,7 +53,24 @@ const MOCK_INVESTIGATIONS: AIInvestigation[] = [
 ];
 
 export class InvestigationsRepository {
-  public static getAll(filters?: { status?: string; search?: string }): AIInvestigation[] {
+  public static async getAll(filters?: { status?: string; search?: string }): Promise<AIInvestigation[]> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const whereClause: any = {};
+        if (filters?.status) whereClause.status = filters.status;
+        if (filters?.search) {
+          whereClause.OR = [
+            { title: { contains: filters.search, mode: "insensitive" } },
+            { targetIncidentCode: { contains: filters.search, mode: "insensitive" } },
+          ];
+        }
+        const records = await db.aIInvestigation.findMany({ where: whereClause });
+        if (records.length > 0) return records;
+      } catch (err) {
+        console.warn("[InvestigationsRepository] DB query failed, using memory fallback:", err);
+      }
+    }
+
     let result = [...MOCK_INVESTIGATIONS];
     if (filters?.status) {
       result = result.filter((i) => i.status === filters.status);
@@ -64,7 +82,16 @@ export class InvestigationsRepository {
     return result;
   }
 
-  public static getById(id: string): AIInvestigation | undefined {
+  public static async getById(id: string): Promise<AIInvestigation | undefined> {
+    if (DatabaseClient.isDbAvailable()) {
+      try {
+        const record = await db.aIInvestigation.findUnique({ where: { id } });
+        if (record) return record;
+      } catch (err) {
+        console.warn("[InvestigationsRepository] DB lookup failed, using memory fallback:", err);
+      }
+    }
+
     return MOCK_INVESTIGATIONS.find((i) => i.id === id);
   }
 }
