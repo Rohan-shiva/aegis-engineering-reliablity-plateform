@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { KnowledgeDocument } from "@aegis/types";
-import { MOCK_KNOWLEDGE_DOCS } from "@/mocks/knowledge";
+import { MOCK_KNOWLEDGE_DOCUMENTS } from "@/mocks/knowledge";
 import { fetchFromApi } from "@/lib/api-client";
 
 export interface UseKnowledgeOptions {
@@ -23,7 +23,7 @@ export function useKnowledge(options?: UseKnowledgeOptions) {
     if (options?.search) params.append("search", options.search);
     const queryString = params.toString() ? `?${params.toString()}` : "";
 
-    let filteredMocks = [...MOCK_KNOWLEDGE_DOCS];
+    let filteredMocks = [...MOCK_KNOWLEDGE_DOCUMENTS];
     if (options?.type && options.type !== "all") {
       filteredMocks = filteredMocks.filter((d) => d.type === options.type);
     }
@@ -57,7 +57,7 @@ export function useDocumentDetail(id: string) {
 
   const fetchDocument = useCallback(async () => {
     setLoading(true);
-    const mockMatch = MOCK_KNOWLEDGE_DOCS.find((d) => d.id === id);
+    const mockMatch = MOCK_KNOWLEDGE_DOCUMENTS.find((d: KnowledgeDocument) => d.id === id);
     const res = await fetchFromApi<KnowledgeDocument | undefined>(`/knowledge/${id}`, mockMatch);
     setDocument(res.data);
     setIsLive(res.isLive);

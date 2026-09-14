@@ -185,7 +185,7 @@ export default function OverviewDashboardPage() {
 
       {/* 3. Telemetry Sparkline & Real-time Traffic */}
       <div className="w-full">
-        <TelemetrySparkline datapoints={telemetrySeries} />
+        <TelemetrySparkline data={telemetrySeries} />
       </div>
 
       {/* 4. Service Health Grid */}

@@ -1,7 +1,8 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { StatusType as DomainStatusType } from "@aegis/types";
 
-export type StatusType = "healthy" | "degraded" | "critical" | "unknown";
+export type StatusType = DomainStatusType | "unknown";
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -11,11 +12,18 @@ interface StatusBadgeProps {
 }
 
 const statusConfig: Record<
-  StatusType,
+  string,
   { label: string; dotBg: string; badgeBg: string; text: string; border: string }
 > = {
   healthy: {
     label: "Healthy",
+    dotBg: "bg-emerald-400 animate-pulse",
+    badgeBg: "bg-emerald-500/10",
+    text: "text-emerald-400",
+    border: "border-emerald-500/20",
+  },
+  nominal: {
+    label: "Nominal",
     dotBg: "bg-emerald-400 animate-pulse",
     badgeBg: "bg-emerald-500/10",
     text: "text-emerald-400",
@@ -30,6 +38,13 @@ const statusConfig: Record<
   },
   critical: {
     label: "Critical",
+    dotBg: "bg-red-500 animate-ping",
+    badgeBg: "bg-red-500/10",
+    text: "text-red-400",
+    border: "border-red-500/30",
+  },
+  failing: {
+    label: "Failing",
     dotBg: "bg-red-500 animate-ping",
     badgeBg: "bg-red-500/10",
     text: "text-red-400",

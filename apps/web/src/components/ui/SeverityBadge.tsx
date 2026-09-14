@@ -1,7 +1,8 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { SeverityType as DomainSeverityType } from "@aegis/types";
 
-export type SeverityType = "SEV-1" | "SEV-2" | "SEV-3" | "SEV-4";
+export type SeverityType = DomainSeverityType;
 
 interface SeverityBadgeProps {
   severity: SeverityType;
@@ -10,10 +11,16 @@ interface SeverityBadgeProps {
 }
 
 const severityConfig: Record<
-  SeverityType,
+  string,
   { bg: string; text: string; border: string; dot: string }
 > = {
   "SEV-1": {
+    bg: "bg-red-950/60",
+    text: "text-red-400 font-bold",
+    border: "border-red-600/40",
+    dot: "bg-red-500",
+  },
+  SEV1: {
     bg: "bg-red-950/60",
     text: "text-red-400 font-bold",
     border: "border-red-600/40",
@@ -25,13 +32,31 @@ const severityConfig: Record<
     border: "border-orange-500/40",
     dot: "bg-orange-500",
   },
+  SEV2: {
+    bg: "bg-orange-950/60",
+    text: "text-orange-400 font-semibold",
+    border: "border-orange-500/40",
+    dot: "bg-orange-500",
+  },
   "SEV-3": {
     bg: "bg-amber-950/50",
     text: "text-amber-300 font-medium",
     border: "border-amber-500/30",
     dot: "bg-amber-400",
   },
+  SEV3: {
+    bg: "bg-amber-950/50",
+    text: "text-amber-300 font-medium",
+    border: "border-amber-500/30",
+    dot: "bg-amber-400",
+  },
   "SEV-4": {
+    bg: "bg-blue-950/40",
+    text: "text-blue-400 font-medium",
+    border: "border-blue-500/30",
+    dot: "bg-blue-400",
+  },
+  SEV4: {
     bg: "bg-blue-950/40",
     text: "text-blue-400 font-medium",
     border: "border-blue-500/30",

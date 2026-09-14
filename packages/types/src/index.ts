@@ -1,5 +1,5 @@
-export type StatusType = "healthy" | "degraded" | "critical" | "nominal" | "failing";
-export type SeverityType = "SEV1" | "SEV2" | "SEV3" | "SEV4";
+export type StatusType = "healthy" | "degraded" | "critical" | "nominal" | "failing" | "unknown";
+export type SeverityType = "SEV1" | "SEV2" | "SEV3" | "SEV4" | "SEV-1" | "SEV-2" | "SEV-3" | "SEV-4";
 
 export interface PaginationMeta {
   total: number;
