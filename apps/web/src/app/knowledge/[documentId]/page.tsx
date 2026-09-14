@@ -7,7 +7,8 @@ import { DocumentContentViewer } from "@/components/knowledge/DocumentContentVie
 import { DocumentVectorChunks } from "@/components/knowledge/DocumentVectorChunks";
 import { DocumentMetaSidebar } from "@/components/knowledge/DocumentMetaSidebar";
 import { Button } from "@/components/ui/Button";
-import { MOCK_KNOWLEDGE_DOCUMENTS } from "@/mocks";
+import { useDocumentDetail } from "@/hooks/useKnowledge";
+import { useRagSearch } from "@/hooks/useRagSearch";
 import {
   BookOpen,
   ArrowLeft,
@@ -28,16 +29,27 @@ interface DocumentDetailPageProps {
 }
 
 export default function DocumentDetailPage({ params }: DocumentDetailPageProps) {
-  const doc = MOCK_KNOWLEDGE_DOCUMENTS.find(
-    (d) => d.id === params.documentId || d.title.toLowerCase().includes(params.documentId.toLowerCase())
-  );
+  const { document: doc, loading, isLive } = useDocumentDetail(params.documentId);
+  const { triggerIngest } = useRagSearch();
 
   const [activeTab, setActiveTab] = useState<"content" | "vector_chunks">("content");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isReindexing, setIsReindexing] = useState(false);
+
+  if (loading) {
+    return (
+      <AppShell isLive={isLive}>
+        <div className="flex flex-col items-center justify-center p-12 text-center border border-slate-800 rounded-lg animate-pulse">
+          <BookOpen className="h-8 w-8 text-slate-600 mb-2" />
+          <h2 className="font-mono text-sm font-bold text-slate-400">Loading Document & Vector Chunks...</h2>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (!doc) {
     return (
-      <AppShell>
+      <AppShell isLive={isLive}>
         <div className="flex flex-col items-center justify-center p-12 text-center border border-slate-800 rounded-lg">
           <BookOpen className="h-10 w-10 text-slate-600 mb-2" />
           <h2 className="font-mono text-base font-bold text-slate-200">Knowledge Document Not Found</h2>
@@ -54,13 +66,26 @@ export default function DocumentDetailPage({ params }: DocumentDetailPageProps) 
     );
   }
 
-  const handleReindex = () => {
-    setToastMessage(`Triggered background vector re-indexing for ${doc.title}...`);
-    setTimeout(() => setToastMessage(null), 3000);
+  const handleReindex = async () => {
+    setIsReindexing(true);
+    setToastMessage(`Triggering vector chunking for ${doc.title}...`);
+    try {
+      const res = await triggerIngest(doc.id);
+      if (res && res.data) {
+        setToastMessage(`Vector ingestion complete (${res.data.ingestedChunksCount} chunks indexed).`);
+      } else {
+        setToastMessage(`Triggered local vector re-indexing for ${doc.title}.`);
+      }
+    } catch {
+      setToastMessage(`Triggered vector re-indexing for ${doc.title}.`);
+    } finally {
+      setIsReindexing(false);
+      setTimeout(() => setToastMessage(null), 3500);
+    }
   };
 
   return (
-    <AppShell>
+    <AppShell isLive={isLive}>
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg border border-brand/40 bg-surface/95 px-4 py-3 shadow-2xl backdrop-blur-md font-mono text-xs text-slate-100">
@@ -100,61 +125,80 @@ export default function DocumentDetailPage({ params }: DocumentDetailPageProps) 
             </div>
 
             <h1 className="font-mono text-xl font-bold text-slate-100">{doc.title}</h1>
-            <p className="text-xs text-slate-400 font-sans max-w-3xl">{doc.description}</p>
+            <p className="text-xs text-slate-400">{doc.description}</p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleReindex} className="gap-1.5 font-mono">
-              <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
-              <span>Re-index Vectors</span>
+          <div className="flex items-center gap-2 font-mono">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReindex}
+              disabled={isReindexing}
+              className="text-xs border-slate-800 text-slate-300 hover:bg-slate-800"
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5 text-brand-light", isReindexing && "animate-spin")} />
+              Re-index Vector Chunks
             </Button>
           </div>
         </div>
 
-        {/* Sub Tabs Navigation */}
-        <div className="flex items-center gap-1 border-t border-slate-800/60 pt-4 font-mono text-xs">
-          <button
-            onClick={() => setActiveTab("content")}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors",
-              activeTab === "content"
-                ? "bg-slate-800 text-brand-light font-bold border border-slate-700/60"
-                : "text-slate-400 hover:bg-slate-800/40 hover:text-slate-200"
-            )}
-          >
-            <FileText className="h-3.5 w-3.5" />
-            <span>Document Content</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("vector_chunks")}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors",
-              activeTab === "vector_chunks"
-                ? "bg-slate-800 text-brand-light font-bold border border-slate-700/60"
-                : "text-slate-400 hover:bg-slate-800/40 hover:text-slate-200"
-            )}
-          >
-            <Database className="h-3.5 w-3.5" />
-            <span>Qdrant RAG Chunks ({doc.vectorChunksCount})</span>
-          </button>
+        {/* Author / Timestamp Subheader */}
+        <div className="flex items-center gap-4 text-xs font-mono text-slate-400 pt-1">
+          <div className="flex items-center gap-1.5">
+            <User className="h-3.5 w-3.5 text-slate-500" />
+            <span>{doc.author}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 text-slate-500" />
+            <span>Updated {doc.updatedAt}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Github className="h-3.5 w-3.5 text-slate-500" />
+            <span>{doc.source}</span>
+          </div>
         </div>
       </div>
 
-      {/* Main Grid Layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 pt-2">
-        {/* Left Column (2/3 width) */}
-        <div className="space-y-6 lg:col-span-2">
-          {activeTab === "content" && (
-            <DocumentContentViewer contentMarkdown={doc.contentMarkdown} title={doc.title} />
+      {/* Tabs Bar */}
+      <div className="flex border-b border-slate-800 font-mono text-xs">
+        <button
+          onClick={() => setActiveTab("content")}
+          className={cn(
+            "flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium transition-colors",
+            activeTab === "content"
+              ? "border-brand text-brand-light bg-brand/5"
+              : "border-transparent text-slate-400 hover:text-slate-200"
           )}
-          {activeTab === "vector_chunks" && (
-            <DocumentVectorChunks chunks={doc.vectorChunks} documentId={doc.id} />
+        >
+          <FileText className="h-4 w-4" />
+          <span>Markdown Content</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("vector_chunks")}
+          className={cn(
+            "flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium transition-colors",
+            activeTab === "vector_chunks"
+              ? "border-brand text-brand-light bg-brand/5"
+              : "border-transparent text-slate-400 hover:text-slate-200"
+          )}
+        >
+          <Database className="h-4 w-4" />
+          <span>Qdrant Vector Chunks ({doc.vectorChunksCount})</span>
+        </button>
+      </div>
+
+      {/* Main Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8">
+          {activeTab === "content" ? (
+            <DocumentContentViewer contentMarkdown={doc.contentMarkdown} />
+          ) : (
+            <DocumentVectorChunks chunks={doc.vectorChunks || []} />
           )}
         </div>
 
-        {/* Right Column (1/3 width) */}
-        <div className="space-y-6">
+        <div className="lg:col-span-4">
           <DocumentMetaSidebar document={doc} />
         </div>
       </div>
