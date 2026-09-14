@@ -5,7 +5,10 @@ import { AppShell } from "@/components/layout/AppShell";
 import { IncidentCatalogHeader } from "@/components/incidents/IncidentCatalogHeader";
 import { IncidentCard } from "@/components/incidents/IncidentCard";
 import { IncidentTable } from "@/components/incidents/IncidentTable";
+import { LiveEventBanner } from "@/components/common/LiveEventBanner";
+import { WsConnectionBadge } from "@/components/common/WsConnectionBadge";
 import { useIncidents } from "@/hooks/useIncidents";
+import { useRealtimeEvents } from "@/hooks/useRealtimeEvents";
 import { SkeletonGrid } from "@/components/common/SkeletonCard";
 import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { SeverityType } from "@/components/ui/SeverityBadge";
@@ -23,12 +26,32 @@ export default function IncidentsCatalogPage() {
     search: searchQuery,
   });
 
+  const { wsStatus } = useRealtimeEvents();
+
   const activeIncidentsCount = incidents.filter(
     (i) => i.status === "active" || i.status === "investigating"
   ).length;
 
   return (
     <AppShell isLive={isLive}>
+      {/* Live Active Incident Broadcast Banner */}
+      <LiveEventBanner
+        code="INC-8492"
+        severity="SEV1"
+        title="Payment Checkout 500 Error Spike & Connection Pool Exhaustion"
+        description="Elevated 500 error rates on payment checkout processing endpoint post v2.4.1 deployment."
+        incidentUrl="/incidents/inc-101"
+      />
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Incident Event Stream
+          </span>
+          <WsConnectionBadge status={wsStatus} />
+        </div>
+      </div>
+
       {/* Header Toolbar */}
       <IncidentCatalogHeader
         viewMode={viewMode}
