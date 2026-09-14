@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search, BookOpen, LayoutGrid, List, Upload, Bot, Database } from "lucide-react";
+import { Search, BookOpen, LayoutGrid, List, Upload, Database, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +44,10 @@ export const KnowledgeCatalogHeader: React.FC<KnowledgeCatalogHeaderProps> = ({
               <Database className="h-3 w-3" />
               {indexedCount} Indexed in Qdrant
             </span>
+            <span className="rounded bg-cyan-950/60 border border-cyan-800/40 px-2 py-0.5 font-mono text-[10px] text-cyan-400 font-bold flex items-center gap-1">
+              <Cpu className="h-3 w-3 animate-pulse text-cyan-400" />
+              1536-dim RAG Engine
+            </span>
           </div>
           <p className="mt-1 text-xs text-slate-400">
             Semantic vector search across runbooks, postmortems, architecture specs, and incident response history.
@@ -66,8 +70,8 @@ export const KnowledgeCatalogHeader: React.FC<KnowledgeCatalogHeaderProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Semantic search runbooks, postmortems, tags..."
-              className="w-60 sm:w-72 rounded-md border border-slate-800 bg-slate-950/60 py-1.5 pl-9 pr-3 font-mono text-xs text-slate-200 placeholder-slate-500 focus:border-brand/60 focus:outline-none"
+              placeholder="Semantic vector search runbooks, postmortems..."
+              className="w-60 sm:w-80 rounded-md border border-slate-800 bg-slate-950/60 py-1.5 pl-9 pr-3 font-mono text-xs text-slate-200 placeholder-slate-500 focus:border-brand/60 focus:outline-none"
             />
           </div>
 
@@ -101,22 +105,22 @@ export const KnowledgeCatalogHeader: React.FC<KnowledgeCatalogHeaderProps> = ({
           <button
             onClick={() => onViewModeChange("grid")}
             className={cn(
-              "rounded p-1.5 text-slate-400 transition-colors",
-              viewMode === "grid" ? "bg-slate-800 text-brand-light" : "hover:text-slate-200"
+              "p-1.5 rounded text-slate-400 hover:text-slate-200 transition-colors",
+              viewMode === "grid" && "bg-slate-800 text-slate-100 font-semibold"
             )}
             title="Grid View"
           >
-            <LayoutGrid className="h-4 w-4" />
+            <LayoutGrid className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={() => onViewModeChange("table")}
             className={cn(
-              "rounded p-1.5 text-slate-400 transition-colors",
-              viewMode === "table" ? "bg-slate-800 text-brand-light" : "hover:text-slate-200"
+              "p-1.5 rounded text-slate-400 hover:text-slate-200 transition-colors",
+              viewMode === "table" && "bg-slate-800 text-slate-100 font-semibold"
             )}
             title="Table View"
           >
-            <List className="h-4 w-4" />
+            <List className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
