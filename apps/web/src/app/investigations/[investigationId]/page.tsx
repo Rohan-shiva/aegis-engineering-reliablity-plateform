@@ -6,9 +6,11 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AIHypothesesPanel } from "@/components/investigations/AIHypothesesPanel";
 import { AIToolExecutionTraces } from "@/components/investigations/AIToolExecutionTraces";
 import { AISidebarPanel } from "@/components/investigations/AISidebarPanel";
+import { RemediationActionCard } from "@/components/incidents/RemediationActionCard";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { useInvestigationDetail, useInvestigations } from "@/hooks/useInvestigations";
+import { useRemediation } from "@/hooks/useRemediation";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import {
   Bot,
@@ -18,6 +20,7 @@ import {
   Brain,
   AlertTriangle,
   Activity,
+  ShieldAlert,
 } from "lucide-react";
 
 interface InvestigationDetailPageProps {
@@ -32,6 +35,10 @@ export default function InvestigationDetailPage({ params }: InvestigationDetailP
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isReRunning, setIsReRunning] = useState(false);
+
+  const { actions, approveAction, rejectAction, executeAction } = useRemediation({
+    incidentId: inv?.targetIncidentCode || params.investigationId,
+  });
 
   const handleRerun = async () => {
     if (!inv) return;
@@ -171,6 +178,39 @@ export default function InvestigationDetailPage({ params }: InvestigationDetailP
           </p>
         </Card>
       </div>
+
+      {/* Remediation Playbooks Section */}
+      {actions.length > 0 && (
+        <div className="space-y-3 pt-4">
+          <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-200">
+            <ShieldAlert className="h-4 w-4 text-brand" />
+            <span>Target Remediation Actions & Safety Guardrails ({actions.length}):</span>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {actions.map((action) => (
+              <RemediationActionCard
+                key={action.id}
+                action={action}
+                onApprove={async (id) => {
+                  await approveAction(id);
+                  setToastMessage(`Action '${id}' approved.`);
+                  setTimeout(() => setToastMessage(null), 3000);
+                }}
+                onReject={async (id) => {
+                  await rejectAction(id);
+                  setToastMessage(`Action '${id}' rejected.`);
+                  setTimeout(() => setToastMessage(null), 3000);
+                }}
+                onExecute={async (id) => {
+                  await executeAction(id);
+                  setToastMessage(`Executed remediation playbook '${id}'.`);
+                  setTimeout(() => setToastMessage(null), 3000);
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 pt-4">

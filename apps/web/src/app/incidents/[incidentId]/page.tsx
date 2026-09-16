@@ -6,19 +6,19 @@ import { AppShell } from "@/components/layout/AppShell";
 import { IncidentTimelineStream } from "@/components/incidents/IncidentTimelineStream";
 import { IncidentAISidebar } from "@/components/incidents/IncidentAISidebar";
 import { IncidentMetaSidebar } from "@/components/incidents/IncidentMetaSidebar";
+import { RemediationActionCard } from "@/components/incidents/RemediationActionCard";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { Button } from "@/components/ui/Button";
 import { MOCK_INCIDENTS } from "@/mocks";
 import { Incident } from "@/types/domain";
+import { useRemediation } from "@/hooks/useRemediation";
 import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
   Clock,
   ShieldCheck,
-  RotateCcw,
-  MessageSquare,
-  FileText,
+  ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,10 @@ export default function IncidentRoomPage({ params }: IncidentRoomPageProps) {
 
   const [incident, setIncident] = useState<Incident | undefined>(initialIncident);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const { actions, approveAction, rejectAction, executeAction, createAction } = useRemediation({
+    incidentId: incident?.code || params.incidentId,
+  });
 
   if (!incident) {
     return (
@@ -65,11 +69,22 @@ export default function IncidentRoomPage({ params }: IncidentRoomPageProps) {
     triggerToast(`Incident status updated to '${newStatus.toUpperCase()}'.`);
   };
 
+  const handleCreateRollback = async () => {
+    const serviceName = incident.affectedServices[0] || "payment-checkout-svc";
+    await createAction({
+      incidentId: incident.code,
+      serviceName,
+      actionType: "rollback_deployment",
+      targetVersion: "7b19a04f",
+    });
+    triggerToast(`Queued rollback remediation playbook for ${serviceName}.`);
+  };
+
   return (
-    <AppShell>
+    <AppShell font-mono>
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg border border-brand/40 bg-surface/95 px-4 py-3 shadow-2xl backdrop-blur-md font-mono text-xs text-slate-100">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg border border-brand/40 bg-slate-900/95 px-4 py-3 shadow-2xl backdrop-blur-md font-mono text-xs text-slate-100">
           <CheckCircle2 className="h-4 w-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
@@ -109,6 +124,16 @@ export default function IncidentRoomPage({ params }: IncidentRoomPageProps) {
 
           {/* Interactive State Actions Bar */}
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCreateRollback}
+              className="gap-1.5 font-mono border-amber-800/60 text-amber-300 hover:bg-amber-950/60"
+            >
+              <ShieldAlert className="h-3.5 w-3.5 text-amber-400" />
+              <span>Queue Remediation</span>
+            </Button>
+
             {incident.status === "active" && (
               <Button
                 variant="secondary"
@@ -148,8 +173,38 @@ export default function IncidentRoomPage({ params }: IncidentRoomPageProps) {
         </div>
       </div>
 
+      {/* Remediation Action Guardrail Cards Section */}
+      {actions.length > 0 && (
+        <div className="space-y-3 pt-4">
+          <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-200">
+            <ShieldAlert className="h-4 w-4 text-brand" />
+            <span>Active Remediation Playbooks & Safety Guardrails ({actions.length}):</span>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {actions.map((action) => (
+              <RemediationActionCard
+                key={action.id}
+                action={action}
+                onApprove={async (id) => {
+                  await approveAction(id);
+                  triggerToast(`Action '${id}' approved by engineer.`);
+                }}
+                onReject={async (id) => {
+                  await rejectAction(id);
+                  triggerToast(`Action '${id}' rejected.`);
+                }}
+                onExecute={async (id) => {
+                  await executeAction(id);
+                  triggerToast(`Playbook execution completed for action '${id}'.`);
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Main Incident Room 2-Column Layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 pt-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 pt-4">
         {/* Left Column: Timeline Stream (2/3 width) */}
         <div className="space-y-6 lg:col-span-2">
           <IncidentTimelineStream timeline={incident.timeline} />
