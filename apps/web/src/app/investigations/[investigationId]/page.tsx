@@ -6,21 +6,19 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AIHypothesesPanel } from "@/components/investigations/AIHypothesesPanel";
 import { AIToolExecutionTraces } from "@/components/investigations/AIToolExecutionTraces";
 import { AISidebarPanel } from "@/components/investigations/AISidebarPanel";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { MOCK_INVESTIGATIONS } from "@/mocks";
+import { useInvestigationDetail, useInvestigations } from "@/hooks/useInvestigations";
+import { SkeletonCard } from "@/components/common/SkeletonCard";
 import {
   Bot,
   ArrowLeft,
-  Sparkles,
   CheckCircle2,
-  Clock,
   RotateCcw,
-  ExternalLink,
   Brain,
   AlertTriangle,
+  Activity,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface InvestigationDetailPageProps {
   params: {
@@ -29,16 +27,47 @@ interface InvestigationDetailPageProps {
 }
 
 export default function InvestigationDetailPage({ params }: InvestigationDetailPageProps) {
-  const inv = MOCK_INVESTIGATIONS.find(
-    (i) => i.id === params.investigationId || i.id.toLowerCase() === params.investigationId.toLowerCase()
-  );
+  const { investigation: inv, loading, isLive, refetch } = useInvestigationDetail(params.investigationId);
+  const { triggerInvestigation } = useInvestigations();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isReRunning, setIsReRunning] = useState(false);
+
+  const handleRerun = async () => {
+    if (!inv) return;
+    setIsReRunning(true);
+    setToastMessage(`Executing new AI Agent reasoning loop for ${inv.targetServiceName || "service"}...`);
+
+    try {
+      await triggerInvestigation({
+        targetIncidentCode: inv.targetIncidentCode,
+        targetServiceName: inv.targetServiceName,
+        title: `Re-run Analysis: ${inv.targetIncidentCode} (${inv.targetServiceName})`,
+      });
+      await refetch();
+    } catch (err) {
+      console.error("Re-run failed:", err);
+    } finally {
+      setIsReRunning(false);
+      setTimeout(() => setToastMessage(null), 3500);
+    }
+  };
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="space-y-4 pt-4">
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      </AppShell>
+    );
+  }
 
   if (!inv) {
     return (
       <AppShell>
-        <div className="flex flex-col items-center justify-center p-12 text-center border border-slate-800 rounded-lg">
+        <div className="flex flex-col items-center justify-center p-12 text-center border border-slate-800 rounded-lg bg-slate-950/40">
           <Bot className="h-10 w-10 text-slate-600 mb-2" />
           <h2 className="font-mono text-base font-bold text-slate-200">Investigation Run Not Found</h2>
           <p className="font-mono text-xs text-slate-400 mt-1 mb-4">
@@ -54,16 +83,11 @@ export default function InvestigationDetailPage({ params }: InvestigationDetailP
     );
   }
 
-  const handleRerun = () => {
-    setToastMessage(`Triggered new AI Agent reasoning loop for ${inv.title}...`);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
   return (
-    <AppShell>
+    <AppShell isLive={isLive}>
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg border border-brand/40 bg-surface/95 px-4 py-3 shadow-2xl backdrop-blur-md font-mono text-xs text-slate-100">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg border border-brand/40 bg-slate-900/95 px-4 py-3 shadow-2xl backdrop-blur-md font-mono text-xs text-slate-100">
           <CheckCircle2 className="h-4 w-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
@@ -103,9 +127,19 @@ export default function InvestigationDetailPage({ params }: InvestigationDetailP
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRerun} className="gap-1.5 font-mono">
-              <RotateCcw className="h-3.5 w-3.5 text-slate-400" />
-              <span>Re-run Agent</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRerun}
+              disabled={isReRunning}
+              className="gap-1.5 font-mono"
+            >
+              {isReRunning ? (
+                <Activity className="h-3.5 w-3.5 animate-spin text-brand" />
+              ) : (
+                <RotateCcw className="h-3.5 w-3.5 text-slate-400" />
+              )}
+              <span>{isReRunning ? "Executing Agent..." : "Re-run Agent"}</span>
             </Button>
           </div>
         </div>
@@ -123,7 +157,7 @@ export default function InvestigationDetailPage({ params }: InvestigationDetailP
               HIGH CONFIDENCE
             </span>
           </div>
-          <p className="mt-1 text-[11px] text-slate-500">Supported by 4 tool execution traces</p>
+          <p className="mt-1 text-[11px] text-slate-500">Supported by {inv.toolCalls.length} tool execution traces</p>
         </Card>
 
         {/* Planner Thought Trace Box (3/4 width) */}
@@ -132,8 +166,8 @@ export default function InvestigationDetailPage({ params }: InvestigationDetailP
             <Brain className="h-4 w-4 text-brand" />
             AI Agent Planner Internal Thought Trace:
           </div>
-          <p className="text-slate-300 font-sans leading-relaxed text-xs">
-            "{inv.plannerThought}"
+          <p className="text-slate-300 font-sans leading-relaxed text-xs whitespace-pre-line">
+            {inv.plannerThought}
           </p>
         </Card>
       </div>
