@@ -250,3 +250,35 @@ export interface DashboardMetricsSummary {
   mttrMinutes: number;
   mttrChangePercentage: number;
 }
+
+export type RemediationActionType =
+  | "rollback_deployment"
+  | "scale_service"
+  | "toggle_circuit_breaker"
+  | "flush_cache";
+
+export type RemediationStatus =
+  | "pending_approval"
+  | "approved"
+  | "executing"
+  | "completed"
+  | "rejected"
+  | "failed";
+
+export interface RemediationAction {
+  id: string;
+  incidentId: string;
+  serviceName: string;
+  actionType: RemediationActionType;
+  status: RemediationStatus;
+  title: string;
+  description: string;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  requiresHumanApproval: boolean;
+  targetVersion?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  executedAt?: string;
+  executionDurationMs?: number;
+  logs: string[];
+}
