@@ -94,4 +94,10 @@ export class InvestigationsRepository {
 
     return MOCK_INVESTIGATIONS.find((i) => i.id === id);
   }
+
+  public static async save(investigation: AIInvestigation): Promise<AIInvestigation> {
+    MOCK_INVESTIGATIONS.unshift(investigation);
+    return investigation;
+  }
 }
+

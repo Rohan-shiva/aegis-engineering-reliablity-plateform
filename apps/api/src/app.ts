@@ -10,6 +10,7 @@ import deploymentsRoutes from "./routes/deploymentsRoutes";
 import knowledgeRoutes from "./routes/knowledgeRoutes";
 import investigationsRoutes from "./routes/investigationsRoutes";
 import ragRoutes from "./routes/ragRoutes";
+import aiRoutes from "./routes/aiRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
 
 export function createApp(): Express {
@@ -30,6 +31,7 @@ export function createApp(): Express {
   app.use(apiPrefix, knowledgeRoutes);
   app.use(apiPrefix, investigationsRoutes);
   app.use(apiPrefix, ragRoutes);
+  app.use(apiPrefix, aiRoutes);
 
   // Centralized Error Handling
   app.use(errorHandler);
