@@ -16,7 +16,7 @@ export default function InvestigationsCatalogPage() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedService, setSelectedService] = useState("all");
 
-  const { investigations, loading, isLive } = useInvestigations({
+  const { investigations, loading, isLive, triggerInvestigation } = useInvestigations({
     status: selectedStatus,
     search: searchQuery,
   });
@@ -46,6 +46,9 @@ export default function InvestigationsCatalogPage() {
         services={services}
         totalInvestigationsCount={investigations.length}
         analyzingCount={analyzingCount}
+        onTriggerInvestigation={async (params) => {
+          await triggerInvestigation(params);
+        }}
       />
 
       {/* Main Content */}

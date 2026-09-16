@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
-import { Search, Bot, LayoutGrid, List, Sparkles, Activity, ShieldAlert } from "lucide-react";
+import React, { useState } from "react";
+import { Search, Bot, LayoutGrid, List, Sparkles, Activity } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { TriggerInvestigationModal } from "./TriggerInvestigationModal";
 
 interface InvestigationCatalogHeaderProps {
   viewMode: "grid" | "table";
@@ -17,6 +18,7 @@ interface InvestigationCatalogHeaderProps {
   services: string[];
   totalInvestigationsCount: number;
   analyzingCount: number;
+  onTriggerInvestigation?: (params: { targetIncidentCode: string; targetServiceName: string }) => Promise<void>;
 }
 
 export const InvestigationCatalogHeader: React.FC<InvestigationCatalogHeaderProps> = ({
@@ -31,7 +33,16 @@ export const InvestigationCatalogHeader: React.FC<InvestigationCatalogHeaderProp
   services,
   totalInvestigationsCount,
   analyzingCount,
+  onTriggerInvestigation,
 }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleTrigger = async (params: { targetIncidentCode: string; targetServiceName: string }) => {
+    if (onTriggerInvestigation) {
+      await onTriggerInvestigation(params);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 border-b border-slate-800/80 pb-5">
       {/* Top Header Row */}
@@ -58,11 +69,23 @@ export const InvestigationCatalogHeader: React.FC<InvestigationCatalogHeaderProp
           </p>
         </div>
 
-        <Button variant="primary" size="sm" className="gap-1.5 font-mono self-start sm:self-auto">
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => setIsModalOpen(true)}
+          className="gap-1.5 font-mono self-start sm:self-auto"
+        >
           <Sparkles className="h-4 w-4" />
           <span>New Investigation</span>
         </Button>
       </div>
+
+      {/* Trigger Investigation Modal */}
+      <TriggerInvestigationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onTrigger={handleTrigger}
+      />
 
       {/* Filter & Toolbar Controls */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
