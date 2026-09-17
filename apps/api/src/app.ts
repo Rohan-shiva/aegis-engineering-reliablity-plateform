@@ -12,6 +12,7 @@ import investigationsRoutes from "./routes/investigationsRoutes";
 import ragRoutes from "./routes/ragRoutes";
 import aiRoutes from "./routes/aiRoutes";
 import remediationRoutes from "./routes/remediationRoutes";
+import systemRoutes from "./routes/systemRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
 
 export function createApp(): Express {
@@ -34,6 +35,7 @@ export function createApp(): Express {
   app.use(apiPrefix, ragRoutes);
   app.use(apiPrefix, aiRoutes);
   app.use(apiPrefix, remediationRoutes);
+  app.use(apiPrefix, systemRoutes);
 
   // Centralized Error Handling
   app.use(errorHandler);

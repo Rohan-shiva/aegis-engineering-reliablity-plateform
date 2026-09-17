@@ -3,6 +3,7 @@ import { VectorStore } from "../rag/vectorStore";
 import { ToolRegistry } from "../ai/toolRegistry";
 import { RemediationRegistry } from "../remediation/remediationRegistry";
 import { AegisWsServer } from "../websocket/wsServer";
+import { BenchmarkRunner } from "../utils/benchmarkRunner";
 
 export interface SystemStatusResponse {
   platform: string;
@@ -88,6 +89,24 @@ export class SystemController {
       res.status(500).json({
         success: false,
         error: "Failed to retrieve system status diagnostics",
+        details: msg,
+      });
+    }
+  }
+
+  public static async runBenchmark(req: Request, res: Response): Promise<void> {
+    try {
+      const metrics = await BenchmarkRunner.runPlatformBenchmark();
+      res.status(200).json({
+        success: true,
+        data: metrics,
+        message: "Platform performance benchmark executed successfully.",
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({
+        success: false,
+        error: "Benchmark execution failed",
         details: msg,
       });
     }
