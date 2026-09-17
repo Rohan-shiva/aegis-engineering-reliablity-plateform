@@ -143,7 +143,7 @@ export const SystemDiagnosticsModal: React.FC<SystemDiagnosticsModalProps> = ({
 
         <div className="flex justify-between items-center border-t border-slate-800 pt-4">
           <div className="text-slate-500 text-[11px]">
-            Uptime: Math.floor({status.uptimeSeconds}s)
+            Uptime: {Math.floor(status.uptimeSeconds)}s
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={onClose}>
