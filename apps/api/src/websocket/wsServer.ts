@@ -58,4 +58,9 @@ export class AegisWsServer {
       }
     }
   }
+
+  public static getClientCount(): number {
+    return this.clients.size;
+  }
 }
+
