@@ -2,6 +2,7 @@ import React from "react";
 import { ShieldAlert, Search, Bell, ChevronDown, Activity } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ApiConnectionBadge } from "@/components/common/ApiConnectionBadge";
+import { PlatformStatusBanner } from "@/components/common/PlatformStatusBanner";
 
 interface TopNavProps {
   onToggleMobileSidebar?: () => void;
@@ -65,8 +66,9 @@ export const TopNav: React.FC<TopNavProps> = ({ onToggleMobileSidebar, isLive = 
         </div>
       </div>
 
-      {/* Right section: Environment status, API Connection Badge & User Profile */}
+      {/* Right section: Environment status, Platform Status Banner & User Profile */}
       <div className="flex items-center gap-3">
+        <PlatformStatusBanner />
         <ApiConnectionBadge isLive={isLive} />
 
         {/* Environment Indicator */}
