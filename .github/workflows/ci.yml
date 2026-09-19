@@ -1,0 +1,58 @@
+name: Aegis CI/CD Automation Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Job 1: TypeScript Type Checking across Monorepo Workspaces
+  type-check:
+    name: Monorepo Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Workspace Dependencies
+        run: npm ci
+
+      - name: Type-Check Shared Types Package
+        run: npm run type-check --workspace=packages/types
+
+      - name: Type-Check Express API Workspace
+        run: npm run type-check --workspace=apps/api
+
+      - name: Type-Check Next.js Web Workspace
+        run: npm run type-check --workspace=apps/web
+
+  # Job 2: Production Build Verification
+  build-verification:
+    name: Build Verification
+    needs: type-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Workspace Dependencies
+        run: npm ci
+
+      - name: Build Express API
+        run: npm run build --workspace=apps/api
+
+      - name: Build Next.js Web Dashboard
+        run: npm run build --workspace=apps/web
