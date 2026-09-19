@@ -27,7 +27,7 @@ This document outlines the complete 24-day engineering roadmap for the **Aegis E
 ## 📅 Extended Phase 2: Operations, Automation & Hardening (Days 16–24)
 
 - [x] **Day 16**: Project Documentation, Interactive Badges, & 24-Day Roadmap Schedule
-- [ ] **Day 17**: Docker Containerization (`Dockerfile`, `docker-compose.yml` for API, Web, Redis, Qdrant)
+- [x] **Day 17**: Docker Containerization (`Dockerfile`, `docker-compose.yml` for API, Web, Redis, Qdrant)
 - [ ] **Day 18**: GitHub Actions CI/CD Workflows (`.github/workflows/ci.yml` for type-check, lint, build)
 - [ ] **Day 19**: OpenAPI 3.0 Specification & Swagger UI Documentation (`/api-docs`)
 - [ ] **Day 20**: Prometheus Telemetry Exporter & Health Metrics Middleware (`/metrics`)
